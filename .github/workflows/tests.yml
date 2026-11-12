@@ -46,6 +46,21 @@ jobs:
         with:
           path: allure-report
 
+  postman:
+    name: Коллекция Postman (Newman)
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Скачать код
+        uses: actions/checkout@v7
+
+      - name: Установить Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Запустить коллекцию
+        run: npx --yes newman@6 run postman/booker.postman_collection.json
+
   report:
     needs: test
     if: always() && github.ref == 'refs/heads/main'

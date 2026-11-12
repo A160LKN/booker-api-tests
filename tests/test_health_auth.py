@@ -1,8 +1,7 @@
 import allure
-from jsonschema import validate
 
-from data import schemas
 from data.payloads import ADMIN_PASSWORD, ADMIN_USERNAME
+from models.booking import AuthError, Token
 
 
 @allure.epic("Restful Booker API")
@@ -28,7 +27,7 @@ class TestAuth:
         response = client.auth(ADMIN_USERNAME, ADMIN_PASSWORD)
 
         assert response.status_code == 200
-        validate(response.json(), schemas.TOKEN)
+        Token.model_validate(response.json())
 
     @allure.severity(allure.severity_level.CRITICAL)
     @allure.title("С неверным паролем токен не выдаётся")
@@ -38,5 +37,5 @@ class TestAuth:
         # Известная особенность API: ошибка приходит со статусом 200, а не 401.
         # Поэтому проверяем тело ответа, а не только код.
         assert response.status_code == 200
-        assert response.json() == {"reason": "Bad credentials"}
-        assert "token" not in response.json()
+        # Модель не допускает лишних полей — значит, токена в ответе точно нет
+        assert AuthError.model_validate(response.json()) == AuthError(reason="Bad credentials")
