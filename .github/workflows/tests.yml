@@ -33,8 +33,14 @@ jobs:
       - name: Установить зависимости
         run: pip install -r requirements.txt
 
+      # Restful Booker — чужой бесплатный стенд: он засыпает и иногда отвечает 502/503.
+      # Повторяем только такие падения (сеть, таймаут, 5xx от стенда) — до двух раз с паузой.
+      # Ошибка в логике API или в тесте не повторяется и роняет прогон сразу; повторы видны в отчёте
       - name: Запустить тесты
-        run: pytest
+        run: >-
+          pytest --reruns 2 --reruns-delay 10
+          --only-rerun "requests.exceptions" --only-rerun "ConnectionError" --only-rerun "Timeout"
+          --only-rerun "assert 50[0234] =="
 
       - name: Собрать Allure-отчёт
         if: always()   # отчёт нужен и тогда, когда тесты упали
